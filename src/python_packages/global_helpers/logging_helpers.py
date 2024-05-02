@@ -1,8 +1,8 @@
 import logging
 
-def setup_logger():
+def setup_logger(name=__name__):
     # Create a logger
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
 
     # Create a console handler and set its log level
