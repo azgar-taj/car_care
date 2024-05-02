@@ -4,8 +4,8 @@ setup(
     name='car_endpoints',
     version='1.0.0',
     description='Python package for car endpoints',
-    author='Your Name',
-    author_email='your@email.com',
+    author='Abdul Azgar Taj',
+    author_email='aat10@iitbbs.ac.in',
     packages=find_packages(),
     install_requires=[
         # Add any dependencies your package requires here
