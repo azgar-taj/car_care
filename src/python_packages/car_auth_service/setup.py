@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='car_endpoints',
+    name='car_auth_service',
     version='1.0.0',
-    description='Python package for car endpoints',
+    description='Python package for car service authentication',
     author='Abdul Azgar Taj',
     author_email='aat10@iitbbs.ac.in',
     packages=find_packages(),

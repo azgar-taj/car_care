@@ -5,7 +5,7 @@ from .logging_helpers import setup_logger
 from .constants import MONGO_URL_CONNECTION
 from .models import User, Service
 import os
-import json
+from bson import json_util
 
 logger = setup_logger(__name__)
 
@@ -77,14 +77,9 @@ class AuthenticationDatabaseConnector(DatabaseConnector):
     def add_user(self, user: User):
         if self.get_user(user.username):
             logger.error(f"User {user.username} already exists")
-            return None
+            return ''
         logger.debug(f"Adding user {user} to the database")
-        return self.collection.insert_one(
-            {
-                "username": user.username,
-                "password": user.password, 
-                "isAdmin": user.isAdmin
-            }).inserted_id
+        return str(self.collection.insert_one(user.dict()).inserted_id)
 
     def delete_user(self, username: str):
         logger.debug(f"Deleting user {username} from the database")
