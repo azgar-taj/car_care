@@ -1,9 +1,9 @@
 from enum import Enum
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from .logging_helpers import setup_logger
-from .constants import MONGO_URL_CONNECTION
-from .models import User, Service
+from global_helpers.logging_helpers import setup_logger
+from global_helpers.constants import MONGO_URL_CONNECTION
+from car_service_contracts.models import User, Service
 import os
 from bson import json_util
 
@@ -83,7 +83,7 @@ class AuthenticationDatabaseConnector(DatabaseConnector):
 
     def delete_user(self, username: str):
         logger.debug(f"Deleting user {username} from the database")
-        return self.collection.delete_one({"username": username}).deleted_count
+        return self.collection.delete_one
 
     def update_user(self, username: str, new_user: User):
         logger.debug(f"Updating user {username} in the database")
@@ -122,7 +122,10 @@ class AuthenticationDatabaseConnector(DatabaseConnector):
                     }
                 }
             ).modified_count
-
+    
+    def is_admin(self, username: str):
+        logger.debug(f"Checking if {username} is an admin")
+        return self.collection.find_one({"username": username, "isAdmin": True}) is not None
 
 class CarServicesDatabase(DatabaseConnector):
     """
