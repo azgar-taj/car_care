@@ -3,6 +3,7 @@ class AuthServiceContracts:
     USER_METADATA_URI = 'user_metadata'
     REFRESH_URI = 'refresh'
     REGISTER_URI = 'register'
+    UPDATE_URI = 'update'
 
 class CarServicesContracts:
     SERVICE_URI = 'service'

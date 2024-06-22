@@ -25,6 +25,7 @@ class AuthService:
         self.app.get(f'/{AuthServiceContracts.USER_METADATA_URI}')(self.user_metadata)
         self.app.post(f'/{AuthServiceContracts.REFRESH_URI}')(self.refresh)
         self.app.post(f'/{AuthServiceContracts.REGISTER_URI}')(self.register_user)
+        self.app.patch(f'/{AuthServiceContracts.UPDATE_URI}')(self.update_user)
 
     def authjwt_exception_handler(self, request: Request, exc: AuthJWTException):
         return JSONResponse(
@@ -36,9 +37,11 @@ class AuthService:
         return self.app
 
     def get_token(self, user: User, Authorize: AuthJWT = Depends()):
-        if not AuthenticationDatabaseConnector().get_user(user.username):
+        requested_user = AuthenticationDatabaseConnector().get_user(user.username)
+        if not requested_user or requested_user['password'] != user.password:
             raise HTTPException(status_code=401, detail="Bad username or password")
         access_token = Authorize.create_access_token(subject=user.username)
+        self.logger.info(f"Token generated for user {user.username}")
         return {"access_token": access_token}
 
     def user_metadata(self, Authorize: AuthJWT = Depends()):
@@ -53,6 +56,7 @@ class AuthService:
         Authorize.jwt_refresh_token_required()
         current_user = Authorize.get_jwt_subject()
         new_access_token = Authorize.create_access_token(subject=current_user)
+        self.logger.info(f"Token refreshed for user {current_user}")
         return {"access_token": new_access_token}
 
     def register_user(self, user: User):
@@ -66,5 +70,18 @@ class AuthService:
         except Exception as e:
             return UserResponse(success=False, message="Error adding user", userId=user_id, status="Inactive")
         return UserResponse(success=True, message="User added successfully", userId=user_id, status="Active")
+
+    def update_user(self, user: User, Authorize: AuthJWT = Depends()):
+        if not AuthenticationDatabaseConnector().is_admin(Authorize.get_jwt_subject()):
+            raise HTTPException(status_code=401, detail="Unauthorized")
+        try:
+            user_id = AuthenticationDatabaseConnector().update_user(user.username, user)
+            if not user_id:
+                return UserResponse(success=False, message="User does not exist", userId=user_id, status="Inactive")
+            self.logger.info(f"User {user.username} updated successfully, user_id: {user_id}")
+        except Exception as e:
+            self.logger.exception(e)
+            return UserResponse(success=False, message="Error updating user", userId=user_id, status="Inactive")
+        return UserResponse(success=True, message="User updated successfully", userId=user_id, status="Active")
 
 app = AuthService().get_server()

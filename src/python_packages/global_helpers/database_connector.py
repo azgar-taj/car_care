@@ -87,7 +87,7 @@ class AuthenticationDatabaseConnector(DatabaseConnector):
 
     def update_user(self, username: str, new_user: User):
         logger.debug(f"Updating user {username} in the database")
-        return self.collection.update_one({"username": username}, {"$set": new_user}).modified_count
+        return self.collection.update_one({"username": username}, {"$set": new_user.dict()}).modified_count
 
     def get_admins(self):
         logger.debug("Getting admins from the database")
