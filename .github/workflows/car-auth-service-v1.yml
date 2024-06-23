@@ -8,6 +8,11 @@ env:
   IMAGE_NAME_CAR_AUTH: car-auth-service
   IMAGE_NAME_CAR_SERVICES: car-services-manager
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   build:
     name: Build docker image and push to ACR
@@ -30,10 +35,10 @@ jobs:
       - name: Build the Docker image - CarServicesManager
         run: docker build src/python_packages/ --file src/python_packages/Dockerfile_CarServicesManager --tag ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_SERVICES }}:latest
 
-      - name: Push docker image to ACR
+      - name: Push docker image to ACR - CarAuthService
         run: docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_AUTH }}:latest
 
-      - name: Push docker image to ACR
+      - name: Push docker image to ACR - CarServicesManager
         run: docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_SERVICES }}:latest
 
   deploy:
@@ -44,13 +49,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
- # Logs in with your Azure credentials
+    # Logs in with your Azure credentials
       - name: Azure login
-        uses: azure/login@v1.4.6
+        uses: azure/login@v1.6.1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          creds: ${{ secrets.AZURE_CLIENT_CREDENTIALS }}
 
       # Use kubelogin to configure your kubeconfig for Azure auth
       - name: Set up kubelogin for non-interactive login
@@ -73,6 +76,12 @@ jobs:
       - name: Deploy service to Kubernetes cluster
         run: kubectl apply -f kube-deployments/kube-car-auth-service-app.yaml
 
-      - name: Get the public IP of the service
-        run: kubectl get service car-services-manager-app
+      - name: Deploy to Kubernetes cluster
+        run: kubectl apply -f kube-deployments/kube-car-services-manager-deployment.yaml
+      
+      - name: Deploy service to Kubernetes cluster
+        run: kubectl apply -f kube-deployments/kube-car-services-manager-app.yaml
+
+      - name: Check status of services
+        run: kubectl get services
         shell: bash
