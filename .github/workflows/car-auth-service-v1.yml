@@ -5,7 +5,8 @@ on:
     branches: [ "main" ]
 
 env:
-  IMAGE_NAME: car-auth-service
+  IMAGE_NAME_CAR_AUTH: car-auth-service
+  IMAGE_NAME_CAR_SERVICES: car-services-manager
 
 jobs:
   build:
@@ -23,9 +24,14 @@ jobs:
           username: ${{ secrets.ACR_USER }}
           password: ${{ secrets.ACR_KEY }}
 
-      - name: Build the Docker image
-        run: docker build src/python_packages/ --file src/python_packages/Dockerfile_CarAuthService --tag ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:latest
+      - name: Build the Docker image - CarAuthService
+        run: docker build src/python_packages/ --file src/python_packages/Dockerfile_CarAuthService --tag ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_AUTH }}:latest
 
+      - name: Build the Docker image - CarServicesManager
+        run: docker build src/python_packages/ --file src/python_packages/Dockerfile_CarServicesManager --tag ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_SERVICES }}:latest
 
       - name: Push docker image to ACR
-        run: docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:latest
+        run: docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_AUTH }}:latest
+
+      - name: Push docker image to ACR
+        run: docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_SERVICES }}:latest
