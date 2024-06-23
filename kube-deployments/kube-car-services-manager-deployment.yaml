@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: car-services-manager-deployment
+  labels:
+    app: car-services-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: car-services-manager
+  template:
+    metadata:
+      labels:
+        app: car-services-manager
+    spec:
+      containers:
+      - name: car-services-manager-container
+        image: abtaj.azurecr.io/car-services-manager:latest
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
+        env:
+        - name: MONGO_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: car-care-secrets
+              key: mongo-db-username
+        - name: MONGO_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: car-care-secrets
+              key: mongo-db-password
+        - name: MONGO_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: car-care-secrets
+              key: mongo-db-name
