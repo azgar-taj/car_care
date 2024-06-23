@@ -35,3 +35,44 @@ jobs:
 
       - name: Push docker image to ACR
         run: docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME_CAR_SERVICES }}:latest
+
+  deploy:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+ # Logs in with your Azure credentials
+      - name: Azure login
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Use kubelogin to configure your kubeconfig for Azure auth
+      - name: Set up kubelogin for non-interactive login
+        uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: 'v0.0.25'
+
+      # Retrieves your Azure Kubernetes Service cluster's kubeconfig file
+      - name: Get K8s context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+          admin: 'false'
+          use-kubelogin: 'true'
+
+      - name: Deploy to Kubernetes cluster
+        run: kubectl apply -f kube-deployments/kube-car-auth-service-deployment.yaml
+
+      - name: Deploy service to Kubernetes cluster
+        run: kubectl apply -f kube-deployments/kube-car-auth-service-app.yaml
+
+      - name: Get the public IP of the service
+        run: kubectl get service car-services-manager-app
+        shell: bash
